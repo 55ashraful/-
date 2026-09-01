@@ -47,7 +47,7 @@
     const CLOUD_NAME = "ssp47mxh"; 
     const UPLOAD_PRESET = "studio";
 
-    // ১. লগইন ট্র্যাকিং (Auth State Check)
+    // ১. লগইন ট্র্যাকিং
     onAuthStateChanged(auth, (user) => {
       if (user) {
         document.getElementById('loginSection').style.display = 'none';
@@ -79,7 +79,7 @@
       signOut(auth);
     });
 
-    // ৪. ভিডিও আপলোড (Cloudinary + Realtime DB)
+    // ৪. ভিডিও আপলোড (Cloudinary Video Endpoint)
     document.getElementById('videoForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const title = document.getElementById('title').value;
@@ -94,14 +94,16 @@
       }
 
       uploadBtn.disabled = true;
-      statusText.innerText = "Cloudinary-তে ভিডিও আপলোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।";
+      statusText.innerText = "Cloudinary-তে ভিডিও আপলোড হচ্ছে... অপেক্ষা করুন।";
 
       const formData = new FormData();
       formData.append('file', file);
       formData.append('upload_preset', UPLOAD_PRESET);
+      formData.append('resource_type', 'video'); // ভিডিও ফাইল স্পষ্ট করা হলো
 
       try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+        // সরাসরি ভিডিও আপলোড URL ব্যবহার করা হচ্ছে
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
           method: 'POST',
           body: formData
         });
@@ -125,14 +127,14 @@
           statusText.innerText = "❌ আপলোড ব্যর্থ হয়েছে!";
         }
       } catch (err) {
-        alert("সমস্যা হয়েছে: " + err.message);
+        alert("নেটওয়ার্ক এরর: " + err.message);
         statusText.innerText = "❌ আপলোড ব্যর্থ হয়েছে!";
       } finally {
         uploadBtn.disabled = false;
       }
     });
 
-    // ৫. ক্লিক অ্যাড সেভ
+    // ৫. সেটিং সেভ
     document.getElementById('adForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const adUrl = document.getElementById('adUrl').value;
@@ -147,7 +149,6 @@
       }
     });
 
-    // ৬. ব্যানার অ্যাড সেভ
     document.getElementById('bannerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const bannerCode = document.getElementById('bannerCode').value;
@@ -160,7 +161,6 @@
       }
     });
 
-    // সেটিং লোড
     function loadSettings() {
       onValue(ref(db, 'settings/adConfig'), (snapshot) => {
         const data = snapshot.val();
@@ -179,7 +179,6 @@
 </head>
 <body>
 
-  <!-- লগইন ফরম -->
   <div class="card" id="loginSection">
     <h2>🔒 এডমিন লগইন</h2>
     <form id="loginForm">
@@ -196,15 +195,12 @@
     <div id="loginError" style="color: #ff4757; font-size: 13px; margin-top: 10px; text-align: center;"></div>
   </div>
 
-  <!-- এডমিন প্যানেল (লগইন করার পর দেখাবে) -->
   <div id="adminSection">
-    
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <h1 style="font-size: 20px; color: #ff4757;">এডমিন প্যানেল</h1>
       <button id="logoutBtn" class="btn-red" style="width: auto; padding: 8px 15px;">লগআউট</button>
     </div>
 
-    <!-- ভিডিও আপলোড -->
     <div class="card">
       <h2>🎥 ফোন থেকে ভিডিও আপলোড</h2>
       <form id="videoForm">
@@ -221,7 +217,6 @@
       <div id="statusText"></div>
     </div>
 
-    <!-- ক্লিক অ্যাড -->
     <div class="card">
       <h2>🎯 ভিডিও ক্লিক অ্যাড (Direct Link)</h2>
       <form id="adForm">
@@ -248,7 +243,6 @@
       </div>
     </div>
 
-    <!-- ব্যানার অ্যাড -->
     <div class="card">
       <h2>📜 নিচের স্থায়ী ব্যানার অ্যাড (Banner Script Code)</h2>
       <form id="bannerForm">
@@ -263,7 +257,6 @@
         <strong>স্ট্যাটাস:</strong> <span id="currentBannerCode">নাই</span>
       </div>
     </div>
-
   </div>
 
 </body>
